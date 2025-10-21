@@ -1,0 +1,101 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Таро - Зеркало Души{% endblock %}
+
+{% block content %}
+<div class="tarot-container">
+    <h1>🔮 Расклад Таро</h1>
+    <p class="subtitle">Задайте вопрос звездам и получите ответ</p>
+
+    <div class="tarot-form-card">
+        <form method="post" class="tarot-form">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="question">Ваш вопрос:</label>
+                <textarea
+                    id="question"
+                    name="question"
+                    rows="4"
+                    placeholder="Задайте вопрос, который вас волнует..."
+                    required
+                ></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-large" id="submitBtn">
+                <span class="btn-text">🔮 Сделать расклад</span>
+                <span class="btn-loader" style="display: none;">
+                    <span class="spinner"></span> Карты раскладываются...
+                </span>
+            </button>
+        </form>
+    </div>
+
+    {% if readings %}
+    <div class="readings-history">
+        <h2>История раскладов</h2>
+        <div class="readings-list">
+            {% for reading in readings %}
+            <div class="reading-card">
+                <div class="reading-date">{{ reading.created_at|date:"d.m.Y H:i" }}</div>
+                <div class="reading-question">
+                    <strong>Вопрос:</strong> {{ reading.question }}
+                </div>
+                <div class="reading-cards">
+                    <strong>Карты:</strong>
+                    <ul>
+                        {% for card in reading.cards %}
+                        <li>{{ card.position }}: <strong>{{ card.card }}</strong></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="reading-interpretation">
+                    <strong>Интерпретация:</strong>
+                    <p>{{ reading.interpretation }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.btn-loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.tarot-form');
+    const submitBtn = document.getElementById('submitBtn');
+
+    if (form && submitBtn) {
+        form.addEventListener('submit', function() {
+            submitBtn.disabled = true;
+            submitBtn.querySelector('.btn-text').style.display = 'none';
+            submitBtn.querySelector('.btn-loader').style.display = 'flex';
+        });
+    }
+});
+</script>
+{% endblock %}

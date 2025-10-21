@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Зеркало Души{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Глобальный спиннер загрузки -->
+    <div id="globalLoader" class="global-loader" style="display: none;">
+        <div class="global-loader-backdrop"></div>
+        <div class="global-loader-spinner">
+            <div class="spinner-circle"></div>
+            <p class="loader-text">Загрузка...</p>
+        </div>
+    </div>
+
+    {% if user.is_authenticated %}
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">🔮 Зеркало Души</div>
+            <ul class="nav-menu">
+                <li><a href="{% url 'dashboard' %}">Главная</a></li>
+                <li><a href="{% url 'daily_entry' %}">Дневник</a></li>
+                <li><a href="{% url 'tasks' %}">Задания</a></li>
+                <li><a href="{% url 'tarot' %}">Таро</a></li>
+                <li><a href="{% url 'natal_chart' %}">Натальная карта</a></li>
+                <li><a href="{% url 'statistics' %}">Статистика</a></li>
+                <li><a href="{% url 'logout' %}">Выход</a></li>
+            </ul>
+            <div class="user-info">
+                <span>{{ user.username }}</span>
+                <span class="level">Уровень {{ user.level }}</span>
+                <span class="exp">{{ user.total_experience }} XP</span>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="/static/js/main.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

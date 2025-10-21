@@ -1,0 +1,283 @@
+{% extends 'core/base.html' %}
+{% load ai_filters %}
+
+{% block title %}История записей - Зеркало Души{% endblock %}
+
+{% block content %}
+<div class="entries-history-container">
+    <div class="page-header">
+        <h1>📔 История записей дневника</h1>
+        <p class="subtitle">Все ваши записи и советы от звезд</p>
+    </div>
+
+    <div class="actions-bar">
+        <a href="{% url 'daily_entry' %}" class="btn btn-primary">
+            ✍️ Создать новую запись
+        </a>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+            🏠 На главную
+        </a>
+    </div>
+
+    {% if entries %}
+    <div class="entries-list">
+        {% for entry in entries %}
+        <div class="entry-card">
+            <div class="entry-header">
+                <div class="entry-date">
+                    📅 {{ entry.created_at|date:"d.m.Y в H:i" }}
+                </div>
+                <div class="entry-emotion">
+                    <span class="emotion-badge emotion-{{ entry.emotion_level }}">
+                        {{ entry.emotion_level }}/10
+                    </span>
+                </div>
+            </div>
+
+            <div class="entry-content">
+                <h3 class="entry-title">Событие дня</h3>
+                <p class="entry-description">{{ entry.event_description }}</p>
+            </div>
+
+            <div class="entry-advice">
+                <h4>💫 Совет от звезд:</h4>
+                <div class="advice-text">
+                    {{ entry.ai_advice|format_ai_text|highlight_keywords|safe }}
+                </div>
+            </div>
+
+            <div class="entry-footer">
+                <div class="entry-experience">
+                    ⭐ +{{ entry.experience_gained }} опыта
+                </div>
+                {% if entry.sign_influences %}
+                <div class="entry-influences">
+                    <span class="influences-label">Влияние на знаки:</span>
+                    {% for sign, points in entry.sign_influences.items %}
+                        <span class="influence-badge">{{ sign }}: +{{ points|floatformat:0 }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📝</div>
+        <h2>Пока нет записей</h2>
+        <p>Начните вести дневник самопознания, чтобы отслеживать свой путь</p>
+        <a href="{% url 'daily_entry' %}" class="btn btn-primary btn-large">
+            Создать первую запись
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.entries-history-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.page-header h1 {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    font-size: 32px;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    font-size: 16px;
+}
+
+.actions-bar {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+
+.entries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.entry-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 25px;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.entry-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15);
+}
+
+.entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.entry-date {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.emotion-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.emotion-1, .emotion-2, .emotion-3 {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.emotion-4, .emotion-5, .emotion-6 {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.emotion-7, .emotion-8 {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.emotion-9, .emotion-10 {
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+    color: white;
+}
+
+.entry-content {
+    margin-bottom: 20px;
+}
+
+.entry-title {
+    color: var(--primary-color);
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.entry-description {
+    color: var(--text-light);
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+.entry-advice {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.entry-advice h4 {
+    color: var(--primary-color);
+    margin-bottom: 12px;
+    font-size: 16px;
+}
+
+.advice-text {
+    color: var(--text-light);
+    line-height: 1.7;
+}
+
+.entry-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.entry-experience {
+    color: var(--secondary-color);
+    font-weight: 600;
+}
+
+.entry-influences {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.influences-label {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-right: 5px;
+}
+
+.influence-badge {
+    background: var(--bg-dark);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.empty-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-state h2 {
+    color: var(--text-light);
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    margin-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+    .entry-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .entry-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .actions-bar {
+        flex-direction: column;
+    }
+
+    .actions-bar .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

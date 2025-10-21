@@ -1,0 +1,218 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Главная - Зеркало Души{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="welcome-section">
+        <h1>🌟 Добро пожаловать, {{ user.username }}!</h1>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Карточка профиля -->
+        <div class="card profile-card">
+            <h2>Ваш профиль</h2>
+            <div class="zodiac-display">
+                <div class="zodiac-sign">{{ profile.inner_sign.get_name_display }}</div>
+                <p class="sign-description">Ваш внутренний знак зодиака</p>
+            </div>
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-label">Уровень</span>
+                    <span class="stat-value">{{ user.level }}</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Опыт</span>
+                    <span class="stat-value">{{ user.total_experience }} XP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ежедневный совет со scratch-off эффектом -->
+        <div class="card daily-advice-card">
+            <h2>Совет дня от звезд</h2>
+            {% if not daily_advice.is_revealed %}
+            <div class="scratch-card" id="scratchCard">
+                <canvas id="scratchCanvas"></canvas>
+                <div class="scratch-text" id="scratchText">
+                    {{ daily_advice.advice }}
+                </div>
+                <div class="scratch-hint">Потрите, чтобы открыть</div>
+            </div>
+            {% else %}
+            <div class="revealed-advice">
+                <p>{{ daily_advice.advice }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Последние записи -->
+        <div class="card entries-card">
+            <div class="card-header-with-link">
+                <h2>Последние записи</h2>
+                <a href="{% url 'entries_history' %}" class="view-all-link">Все записи →</a>
+            </div>
+            {% if recent_entries %}
+            <ul class="entries-list">
+                {% for entry in recent_entries %}
+                <li class="entry-item">
+                    <div class="entry-date">{{ entry.created_at|date:"d.m.Y" }}</div>
+                    <div class="entry-emotion">
+                        Эмоция: <span class="emotion-level emotion-{{ entry.emotion_level }}">{{ entry.emotion_level }}/10</span>
+                    </div>
+                    <div class="entry-text">{{ entry.event_description|truncatewords:15 }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="empty-state">Пока нет записей. Начните вести дневник!</p>
+            {% endif %}
+            <a href="{% url 'daily_entry' %}" class="btn btn-secondary">Создать запись</a>
+        </div>
+
+        <!-- Активные задания -->
+        <div class="card tasks-card">
+            <div class="card-header-with-link">
+                <h2>Текущие задания</h2>
+                <a href="{% url 'tasks' %}" class="view-all-link">Все задания →</a>
+            </div>
+            {% if active_tasks %}
+            <div class="tasks-grid">
+                {% for task in active_tasks %}
+                <div class="task-card-item">
+                    <div class="task-header">
+                        <span class="task-type-badge task-type-{{ task.task_type }}">
+                            {% if task.task_type == 'book' %}📚
+                            {% elif task.task_type == 'movie' %}🎬
+                            {% elif task.task_type == 'series' %}📺
+                            {% elif task.task_type == 'meditation' %}🧘
+                            {% elif task.task_type == 'affirmation' %}✨
+                            {% elif task.task_type == 'challenge' %}🎯
+                            {% endif %}
+                            {{ task.get_task_type_display }}
+                        </span>
+                        <span class="task-reward-badge">+{{ task.experience_reward }} XP</span>
+                    </div>
+                    <h3 class="task-title">{{ task.title }}</h3>
+                    <p class="task-description">{{ task.description|truncatewords:15 }}</p>
+                    <div class="task-footer">
+                        <span class="task-sign">🌟 {{ task.target_sign.name }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-state">Нет активных заданий</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Scratch-off эффект для ежедневного совета
+{% if not daily_advice.is_revealed %}
+document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('scratchCanvas');
+    const ctx = canvas.getContext('2d');
+    const scratchCard = document.getElementById('scratchCard');
+
+    // Устанавливаем размер canvas
+    canvas.width = scratchCard.offsetWidth;
+    canvas.height = scratchCard.offsetHeight;
+
+    // Создаем серебряное покрытие
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#c0c0c0');
+    gradient.addColorStop(0.5, '#e0e0e0');
+    gradient.addColorStop(1, '#c0c0c0');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Добавляем текст подсказки
+    ctx.fillStyle = '#666';
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('✨ Потрите здесь ✨', canvas.width / 2, canvas.height / 2);
+
+    let isDrawing = false;
+    let scratchedPercentage = 0;
+
+    function scratch(x, y) {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.arc(x, y, 30, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Подсчитываем процент стертой области
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        let transparent = 0;
+        for (let i = 3; i < imageData.data.length; i += 4) {
+            if (imageData.data[i] === 0) transparent++;
+        }
+        scratchedPercentage = (transparent / (imageData.data.length / 4)) * 100;
+
+        // Если стерто более 50%, открываем полностью
+        if (scratchedPercentage > 50) {
+            revealAdvice();
+        }
+    }
+
+    function revealAdvice() {
+        canvas.style.opacity = '0';
+        setTimeout(() => {
+            canvas.style.display = 'none';
+        }, 300);
+
+        // Отправляем запрос на сервер
+        fetch('{% url "reveal_advice" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        });
+    }
+
+    // Mouse events
+    canvas.addEventListener('mousedown', (e) => {
+        isDrawing = true;
+        const rect = canvas.getBoundingClientRect();
+        scratch(e.clientX - rect.left, e.clientY - rect.top);
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (isDrawing) {
+            const rect = canvas.getBoundingClientRect();
+            scratch(e.clientX - rect.left, e.clientY - rect.top);
+        }
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        isDrawing = false;
+    });
+
+    // Touch events
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        isDrawing = true;
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        scratch(touch.clientX - rect.left, touch.clientY - rect.top);
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (isDrawing) {
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            scratch(touch.clientX - rect.left, touch.clientY - rect.top);
+        }
+    });
+
+    canvas.addEventListener('touchend', () => {
+        isDrawing = false;
+    });
+});
+{% endif %}
+</script>
+{% endblock %}

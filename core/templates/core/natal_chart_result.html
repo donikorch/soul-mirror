@@ -1,0 +1,201 @@
+{% extends 'core/base.html' %}
+{% load ai_filters %}
+
+{% block title %}Ваша натальная карта - Зеркало Души{% endblock %}
+
+{% block content %}
+<div class="natal-chart-result-container">
+    <h1>🌟 Ваша натальная карта готова!</h1>
+
+    <div class="chart-info">
+        <p><strong>Дата рождения:</strong> {{ natal_chart.birth_date|date:"d.m.Y" }}</p>
+        {% if natal_chart.birth_time %}
+        <p><strong>Время рождения:</strong> {{ natal_chart.birth_time|time:"H:i" }}</p>
+        {% endif %}
+        {% if natal_chart.birth_place %}
+        <p><strong>Место рождения:</strong> {{ natal_chart.birth_place }}</p>
+        {% endif %}
+    </div>
+
+    <div class="chart-visual-section">
+        <h2>🪐 Положение планет в знаках зодиака</h2>
+        <div class="planets-grid">
+            {% for planet, data in natal_chart.planets.items %}
+            <div class="planet-card">
+                <div class="planet-icon">
+                    {% if planet == 'Солнце' %}☀️
+                    {% elif planet == 'Луна' %}🌙
+                    {% elif planet == 'Меркурий' %}☿️
+                    {% elif planet == 'Венера' %}♀️
+                    {% elif planet == 'Марс' %}♂️
+                    {% elif planet == 'Юпитер' %}♃
+                    {% elif planet == 'Сатурн' %}♄
+                    {% else %}⭐
+                    {% endif %}
+                </div>
+                <h3>{{ planet }}</h3>
+                <p class="planet-sign">в {{ data.sign }}</p>
+                <p class="planet-house">{{ data.house }} дом</p>
+                <p class="planet-degree">{{ data.degree }}°</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="interpretations-section">
+        <div class="interpretation-card">
+            <h2>🌞 Общая интерпретация личности</h2>
+            <div class="interpretation-text">{{ natal_chart.personality_reading|format_ai_text|highlight_keywords|safe }}</div>
+        </div>
+
+        <div class="interpretation-card">
+            <h2>💼 Карьера и профессиональное призвание</h2>
+            <div class="interpretation-text">{{ natal_chart.career_reading|format_ai_text|highlight_keywords|safe }}</div>
+        </div>
+
+        <div class="interpretation-card">
+            <h2>❤️ Отношения и любовь</h2>
+            <div class="interpretation-text">{{ natal_chart.relationships_reading|format_ai_text|highlight_keywords|safe }}</div>
+        </div>
+
+        <div class="interpretation-card">
+            <h2>✨ Жизненное предназначение</h2>
+            <div class="interpretation-text">{{ natal_chart.life_purpose_reading|format_ai_text|highlight_keywords|safe }}</div>
+        </div>
+    </div>
+
+    <div class="chart-actions">
+        <a href="{% url 'natal_chart' %}" class="btn btn-secondary">Обновить карту</a>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary">На главную</a>
+    </div>
+</div>
+
+<style>
+.natal-chart-result-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.chart-info {
+    background: var(--bg-card);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+}
+
+.chart-info p {
+    margin: 8px 0;
+    color: var(--text-light);
+}
+
+.chart-visual-section {
+    margin: 40px 0;
+}
+
+.chart-visual-section h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--primary-color);
+}
+
+.planets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.planet-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, #2d3748 100%);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.planet-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
+}
+
+.planet-icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.planet-card h3 {
+    color: var(--primary-color);
+    margin: 10px 0;
+    font-size: 18px;
+}
+
+.planet-sign {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--secondary-color);
+    margin: 8px 0;
+}
+
+.planet-house {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.planet-degree {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.interpretations-section {
+    margin-top: 40px;
+}
+
+.interpretation-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 25px;
+}
+
+.interpretation-card h2 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    font-size: 22px;
+}
+
+.interpretation-text {
+    line-height: 1.8;
+    color: var(--text-light);
+    font-size: 16px;
+}
+
+.ai-paragraph {
+    margin-bottom: 15px;
+    text-align: justify;
+}
+
+.ai-paragraph:last-child {
+    margin-bottom: 0;
+}
+
+.keyword-highlight {
+    color: var(--primary-color);
+    font-weight: 600;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.chart-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 40px;
+    padding-bottom: 40px;
+}
+</style>
+{% endblock %}

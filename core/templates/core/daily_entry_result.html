@@ -1,0 +1,59 @@
+{% extends 'core/base.html' %}
+{% load ai_filters %}
+
+{% block title %}Совет получен - Зеркало Души{% endblock %}
+
+{% block content %}
+<div class="result-container">
+    <h1>✨ Совет от звезд</h1>
+
+    <div class="result-card">
+        <div class="advice-section">
+            <h2>Ваше событие:</h2>
+            <p class="event-text">{{ entry.event_description }}</p>
+
+            <div class="emotion-display">
+                <span>Уровень эмоции:</span>
+                <span class="emotion-level emotion-{{ entry.emotion_level }}">{{ entry.emotion_level }}/10</span>
+            </div>
+        </div>
+
+        <div class="ai-advice-section">
+            <h2>💫 Совет для вас:</h2>
+            <div class="ai-advice">{{ entry.ai_advice|format_ai_text|highlight_keywords|safe }}</div>
+        </div>
+
+        <div class="rewards-section">
+            <h3>Награда:</h3>
+            <div class="reward">
+                <span class="reward-icon">⭐</span>
+                <span class="reward-text">+{{ experience_gained }} опыта</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <a href="{% url 'dashboard' %}" class="btn btn-primary">Вернуться на главную</a>
+        <a href="{% url 'daily_entry' %}" class="btn btn-secondary">Создать еще запись</a>
+    </div>
+</div>
+
+<style>
+.ai-paragraph {
+    margin-bottom: 15px;
+    line-height: 1.7;
+}
+
+.ai-paragraph:last-child {
+    margin-bottom: 0;
+}
+
+.keyword-highlight {
+    color: var(--primary-color);
+    font-weight: 600;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+</style>
+{% endblock %}

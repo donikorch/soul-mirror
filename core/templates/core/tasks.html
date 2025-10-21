@@ -1,0 +1,190 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Задания - Зеркало Души{% endblock %}
+
+{% block content %}
+<div class="tasks-container">
+    <h1>📚 Задания для самопознания</h1>
+    <p class="subtitle">Выполняйте задания, чтобы развивать качества разных знаков зодиака</p>
+
+    <div class="tasks-tabs">
+        <button class="tab-btn active" data-tab="assigned">Назначенные</button>
+        <button class="tab-btn" data-tab="in_progress">В процессе</button>
+        <button class="tab-btn" data-tab="completed">Выполненные</button>
+    </div>
+
+    <div class="tab-content active" id="assigned">
+        <h2>Назначенные задания</h2>
+        {% if assigned_tasks %}
+        <div class="tasks-grid">
+            {% for task in assigned_tasks %}
+            <div class="task-card">
+                <div class="task-header">
+                    <span class="task-type-badge">{{ task.get_task_type_display }}</span>
+                    <span class="task-sign">→ {{ task.target_sign.get_name_display }}</span>
+                </div>
+                <h3>{{ task.title }}</h3>
+                {% if task.author %}
+                <p class="task-author">{{ task.author }}</p>
+                {% endif %}
+                <p>{{ task.description }}</p>
+                <div class="task-footer">
+                    <span class="task-reward">+{{ task.experience_reward }} XP</span>
+                    <button class="btn btn-small btn-secondary" onclick="startTask({{ task.id }})">
+                        Начать
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state">Нет назначенных заданий</p>
+        {% endif %}
+    </div>
+
+    <div class="tab-content" id="in_progress">
+        <h2>Задания в процессе</h2>
+        {% if in_progress_tasks %}
+        <div class="tasks-grid">
+            {% for task in in_progress_tasks %}
+            <div class="task-card">
+                <div class="task-header">
+                    <span class="task-type-badge">{{ task.get_task_type_display }}</span>
+                    <span class="task-sign">→ {{ task.target_sign.get_name_display }}</span>
+                </div>
+                <h3>{{ task.title }}</h3>
+                {% if task.author %}
+                <p class="task-author">{{ task.author }}</p>
+                {% endif %}
+                <p>{{ task.description }}</p>
+                <div class="task-footer">
+                    <span class="task-reward">+{{ task.experience_reward }} XP</span>
+                    <button class="btn btn-small btn-primary" onclick="completeTask({{ task.id }})">
+                        Выполнено
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state">Нет заданий в процессе</p>
+        {% endif %}
+    </div>
+
+    <div class="tab-content" id="completed">
+        <h2>Выполненные задания</h2>
+        {% if completed_tasks %}
+        <div class="tasks-grid">
+            {% for task in completed_tasks %}
+            <div class="task-card completed">
+                <div class="task-header">
+                    <span class="task-type-badge">{{ task.get_task_type_display }}</span>
+                    <span class="task-sign">→ {{ task.target_sign.get_name_display }}</span>
+                </div>
+                <h3>{{ task.title }}</h3>
+                {% if task.author %}
+                <p class="task-author">{{ task.author }}</p>
+                {% endif %}
+                <p>{{ task.description }}</p>
+                <div class="task-footer">
+                    <span class="completed-badge">✓ Выполнено</span>
+                    <span class="task-reward">+{{ task.experience_reward }} XP</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state">Пока нет выполненных заданий</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Переключение табов
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const tab = this.getAttribute('data-tab');
+
+        // Убираем active со всех кнопок и контента
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+        // Добавляем active к текущей кнопке и контенту
+        this.classList.add('active');
+        document.getElementById(tab).classList.add('active');
+    });
+});
+
+// Начать задание
+function startTask(taskId) {
+    GlobalLoader.show('Начинаем задание...');
+
+    fetch(`/tasks/${taskId}/start/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            GlobalLoader.hide();
+        }
+    })
+    .catch(error => {
+        GlobalLoader.hide();
+        alert('Произошла ошибка');
+    });
+}
+
+// Выполнение задания
+function completeTask(taskId) {
+    if (!confirm('Вы действительно выполнили это задание?')) {
+        return;
+    }
+
+    GlobalLoader.show('Выполняем задание...');
+
+    fetch(`/tasks/${taskId}/complete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            let message = `🎉 Отлично! Вы получили +${data.experience_gained} опыта!`;
+
+            if (data.user_leveled_up) {
+                message += `\n\n⭐ Поздравляем! Вы достигли ${data.new_user_level} уровня!`;
+            }
+
+            if (data.sign_level_up) {
+                message += `\n\n✨ Ваш знак зодиака повысил уровень!`;
+            }
+
+            if (data.sign_changed) {
+                message += `\n\n🔮 Ваш внутренний знак изменился на ${data.new_sign_name}!`;
+                if (data.old_tasks_removed > 0) {
+                    message += `\nСтарые задания (${data.old_tasks_removed}) были удалены.`;
+                }
+            }
+
+            alert(message);
+            location.reload();
+        } else {
+            GlobalLoader.hide();
+        }
+    })
+    .catch(error => {
+        GlobalLoader.hide();
+        alert('Произошла ошибка');
+    });
+}
+</script>
+{% endblock %}

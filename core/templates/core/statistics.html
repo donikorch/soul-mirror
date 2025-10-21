@@ -1,0 +1,518 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Статистика - Зеркало Души{% endblock %}
+
+{% block content %}
+<div class="statistics-container">
+    <h1>📊 Статистика и прогресс</h1>
+    <p class="subtitle">Ваш путь самопознания в цифрах</p>
+
+    <!-- Текущий знак и прогресс -->
+    <div class="current-sign-section">
+        <div class="current-sign-card">
+            <h2>🌟 Текущий знак: {{ current_sign.get_name_display }}</h2>
+            <div class="sign-level-info">
+                <span class="level-badge">Уровень {{ current_sign_level }}</span>
+                <span class="exp-text">{{ current_sign_exp }} / {{ exp_to_next }} XP</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ current_sign_progress }}%"></div>
+            </div>
+            <p class="progress-text">{{ current_sign_progress }}% до следующего уровня</p>
+        </div>
+    </div>
+
+    <!-- Топ-3 знака -->
+    <div class="top-signs-section">
+        <h2>🏆 Топ-3 знаков по уровню</h2>
+        <div class="top-signs-grid">
+            {% for sign in top_signs %}
+            <div class="top-sign-card {% if forloop.counter == 1 %}gold{% elif forloop.counter == 2 %}silver{% elif forloop.counter == 3 %}bronze{% endif %}">
+                <div class="rank">№{{ forloop.counter }}</div>
+                <h3>{{ sign.name }}</h3>
+                <div class="sign-stats">
+                    <div class="stat">
+                        <span class="stat-label">Уровень</span>
+                        <span class="stat-value">{{ sign.level }}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Опыт</span>
+                        <span class="stat-value">{{ sign.experience }} XP</span>
+                    </div>
+                </div>
+                {% if sign.is_current %}
+                <div class="current-badge">⭐ Текущий</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Все знаки зодиака -->
+    <div class="all-signs-section">
+        <h2>🌌 Все знаки зодиака</h2>
+        <div class="signs-list">
+            {% for sign in all_signs_stats %}
+            <div class="sign-row {% if sign.is_current %}current{% endif %}">
+                <div class="sign-info">
+                    <span class="sign-name">{{ sign.name }}</span>
+                    {% if sign.is_current %}<span class="badge-current">Текущий</span>{% endif %}
+                </div>
+                <div class="sign-progress-info">
+                    <span class="level-text">Ур. {{ sign.level }}</span>
+                    <div class="mini-progress-bar">
+                        <div class="mini-progress-fill" style="width: {{ sign.progress_percent }}%"></div>
+                    </div>
+                    <span class="exp-value">{{ sign.experience }} XP</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Общая статистика -->
+    <div class="general-stats-section">
+        <h2>📈 Общая статистика</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ user.level }}</div>
+                    <div class="stat-label">Общий уровень</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">💫</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ user.total_experience }}</div>
+                    <div class="stat-label">Общий опыт</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ completed_tasks }}</div>
+                    <div class="stat-label">Заданий выполнено</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📖</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ total_entries }}</div>
+                    <div class="stat-label">Записей в дневнике</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">😊</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ avg_emotion }}/10</div>
+                    <div class="stat-label">Средний уровень эмоций</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🔮</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ total_tarot }}</div>
+                    <div class="stat-label">Раскладов Таро</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика по типам заданий -->
+    <div class="tasks-breakdown-section">
+        <h2>📚 Выполненные задания по типам</h2>
+        <div class="tasks-breakdown">
+            <div class="task-type-bar">
+                <div class="task-type-info">
+                    <span>📖 Книги</span>
+                    <span>{{ books_completed }}</span>
+                </div>
+                <div class="task-type-progress">
+                    <div class="task-type-fill books" 
+                        style="width: {% if completed_tasks > 0 %}{% widthratio books_completed completed_tasks 100 %}{% else %}0{% endif %}%">
+                    </div>
+                </div>
+            </div>
+
+            <div class="task-type-bar">
+                <div class="task-type-info">
+                    <span>🎬 Фильмы</span>
+                    <span>{{ movies_completed }}</span>
+                </div>
+                <div class="task-type-progress">
+                    <div class="task-type-fill movies" 
+                        style="width: {% if completed_tasks > 0 %}{% widthratio movies_completed completed_tasks 100 %}{% else %}0{% endif %}%">
+                    </div>
+                </div>
+            </div>
+
+            <div class="task-type-bar">
+                <div class="task-type-info">
+                    <span>📺 Сериалы</span>
+                    <span>{{ series_completed }}</span>
+                </div>
+                <div class="task-type-progress">
+                    <div class="task-type-fill series" 
+                        style="width: {% if completed_tasks > 0 %}{% widthratio series_completed completed_tasks 100 %}{% else %}0{% endif %}%">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="back-link">
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">← Вернуться на главную</a>
+    </div>
+</div>
+
+<style>
+.statistics-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.current-sign-section {
+    margin: 30px 0;
+}
+
+.current-sign-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, #2d3748 100%);
+    border: 2px solid var(--primary-color);
+    border-radius: 16px;
+    padding: 30px;
+    text-align: center;
+}
+
+.current-sign-card h2 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.sign-level-info {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.level-badge {
+    background: var(--primary-color);
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.exp-text {
+    color: var(--text-muted);
+    font-size: 18px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 30px;
+    background: var(--bg-dark);
+    border-radius: 15px;
+    overflow: hidden;
+    margin: 15px 0;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    transition: width 0.5s ease;
+}
+
+.progress-text {
+    color: var(--text-muted);
+}
+
+.top-signs-section {
+    margin: 40px 0;
+}
+
+.top-signs-section h2 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.top-signs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.top-sign-card {
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 25px;
+    position: relative;
+    text-align: center;
+}
+
+.top-sign-card.gold {
+    border-color: #FFD700;
+    background: linear-gradient(135deg, var(--bg-card), rgba(255, 215, 0, 0.1));
+}
+
+.top-sign-card.silver {
+    border-color: #C0C0C0;
+    background: linear-gradient(135deg, var(--bg-card), rgba(192, 192, 192, 0.1));
+}
+
+.top-sign-card.bronze {
+    border-color: #CD7F32;
+    background: linear-gradient(135deg, var(--bg-card), rgba(205, 127, 50, 0.1));
+}
+
+.rank {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--primary-color);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.top-sign-card h3 {
+    color: var(--primary-color);
+    margin: 10px 0 20px;
+    font-size: 22px;
+}
+
+.sign-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 15px;
+}
+
+.stat {
+    text-align: center;
+}
+
+.stat-label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    display: block;
+    color: var(--primary-color);
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.current-badge {
+    margin-top: 15px;
+    padding: 8px 16px;
+    background: var(--secondary-color);
+    border-radius: 20px;
+    display: inline-block;
+    font-size: 14px;
+}
+
+.all-signs-section {
+    margin: 40px 0;
+}
+
+.all-signs-section h2 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.signs-list {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.sign-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sign-row:last-child {
+    border-bottom: none;
+}
+
+.sign-row.current {
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 8px;
+}
+
+.sign-info {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.sign-name {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.badge-current {
+    background: var(--secondary-color);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+.sign-progress-info {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.level-text {
+    color: var(--primary-color);
+    font-weight: 600;
+    min-width: 50px;
+}
+
+.mini-progress-bar {
+    width: 150px;
+    height: 8px;
+    background: var(--bg-dark);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.mini-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+}
+
+.exp-value {
+    color: var(--text-muted);
+    font-size: 14px;
+    min-width: 70px;
+}
+
+.general-stats-section {
+    margin: 40px 0;
+}
+
+.general-stats-section h2 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.stat-icon {
+    font-size: 36px;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.tasks-breakdown-section {
+    margin: 40px 0;
+}
+
+.tasks-breakdown-section h2 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.tasks-breakdown {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 25px;
+}
+
+.task-type-bar {
+    margin-bottom: 20px;
+}
+
+.task-type-bar:last-child {
+    margin-bottom: 0;
+}
+
+.task-type-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.task-type-progress {
+    width: 100%;
+    height: 20px;
+    background: var(--bg-dark);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.task-type-fill {
+    height: 100%;
+    transition: width 0.5s ease;
+}
+
+.task-type-fill.books {
+    background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.task-type-fill.movies {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.task-type-fill.series {
+    background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+}
+
+.back-link {
+    text-align: center;
+    margin: 40px 0;
+}
+</style>
+{% endblock %}

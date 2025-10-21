@@ -1,0 +1,38 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Результат расклада - Зеркало Души{% endblock %}
+
+{% block content %}
+<div class="tarot-result-container">
+    <h1>🔮 Ваш расклад Таро</h1>
+
+    <div class="result-card">
+        <div class="question-section">
+            <h2>Ваш вопрос:</h2>
+            <p class="question-text">{{ reading.question }}</p>
+        </div>
+
+        <div class="cards-section">
+            <h2>Выпавшие карты:</h2>
+            <div class="tarot-cards">
+                {% for card in reading.cards %}
+                <div class="tarot-card-display">
+                    <div class="card-position">{{ card.position }}</div>
+                    <div class="card-name">{{ card.card }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="interpretation-section">
+            <h2>💫 Интерпретация:</h2>
+            <p class="interpretation-text">{{ reading.interpretation }}</p>
+        </div>
+    </div>
+
+    <div class="actions">
+        <a href="{% url 'tarot' %}" class="btn btn-primary">Задать новый вопрос</a>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">Вернуться на главную</a>
+    </div>
+</div>
+{% endblock %}

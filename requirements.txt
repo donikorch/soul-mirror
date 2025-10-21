@@ -1,0 +1,7 @@
+Django==5.0.1
+langchain
+langchain-community
+langgraph
+ollama
+requests
+Pillow
